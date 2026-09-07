@@ -10,7 +10,7 @@ import 'katex/dist/katex.min.css'
 import ReactMarkdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
-import { askQuestion, deleteDocument, uploadPdf, pollUploadStatus } from './api'
+import { askQuestion, deleteDocument, uploadPdf, pollUploadStatus, clearAllDocuments } from './api'
 import type { AskResponse, Conversation, Document } from './types'
 import './App.css'
 
@@ -356,6 +356,24 @@ function App() {
     }
   }
 
+  async function handleClearAllDocuments() {
+    if (deletingId || busy || uploads.length === 0) return
+    if (!confirm(`Clear all ${uploads.length} document${uploads.length === 1 ? '' : 's'}? This cannot be undone.`)) return
+    setDeletingId('clearing-all')
+    setUploadError(null)
+    try {
+      await clearAllDocuments()
+      setUploads([])
+      setHistory([])
+      setResult(null)
+      setError(null)
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Could not clear documents.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (file) {
@@ -402,8 +420,24 @@ function App() {
 
         <section className="upload-panel" aria-labelledby="upload-heading">
           <div className="upload-copy">
-            <h2 id="upload-heading">Source PDFs</h2>
-            <p>Drop a PDF to ingest it into the retrieval index before you ask.</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+              <div>
+                <h2 id="upload-heading">Source PDFs</h2>
+                <p>Drop a PDF to ingest it into the retrieval index before you ask.</p>
+              </div>
+              {uploads.length > 0 && (
+                <button
+                  type="button"
+                  className="remove-document"
+                  onClick={() => void handleClearAllDocuments()}
+                  disabled={busy || deletingId !== null}
+                  title="Clear all documents"
+                  style={{ flexShrink: 0 }}
+                >
+                  {deletingId === 'clearing-all' ? 'Clearing…' : 'Clear All'}
+                </button>
+              )}
+            </div>
           </div>
 
           <label

@@ -73,12 +73,21 @@ def remove_document(doc_id: str):
         raise HTTPException(status_code=404, detail="Document not found.")
     return {"message": "Document deleted.", "chunks_removed": deleted_count}
 
+@app.delete("/documents")
+def clear_all_documents():
+    """Clear all documents from the database."""
+    reset_session_database()
+    return {"message": "All documents cleared."}
+
 
 @app.post("/ask")
 async def ask(que: Question):
     try:
         standalone_query = contextualize_query(query=que.query, history=que.history)
+        await asyncio.sleep(5)  # Rate limit protection: 5s delay between LLM calls
+
         research_plan = planner(standalone_query)
+        await asyncio.sleep(5)  # Rate limit protection: 5s delay between LLM calls
 
         state = await run_agent_loop(
             research_plan,
@@ -86,9 +95,11 @@ async def ask(que: Question):
             web_search=que.web_search,
             deep_research=que.deep_research,
         )
+        await asyncio.sleep(5)  # Rate limit protection: 5s delay between LLM calls
 
         response = synthesize_answer(state, standalone_query)
         answer_text = response.choices[0].message.content
+        await asyncio.sleep(5)  # Rate limit protection: 5s delay between LLM calls
 
         groundedness = check_groundedness(state, standalone_query, answer_text)
 

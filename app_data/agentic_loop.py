@@ -99,6 +99,7 @@ async def run_agent_loop(research_plan, original_query, web_search: bool = False
     # Checking whether the retrieved data/context is enough to answer (Reflect) :
     # Reflect on Initital evidence
     hop_decision = reflect(state)
+    await asyncio.sleep(5)  # Rate limit protection: 5s delay between LLM calls
 
     state.llm_calls += 1
     state.confidence = hop_decision.confidence
@@ -164,6 +165,7 @@ async def run_agent_loop(research_plan, original_query, web_search: bool = False
 
         # Re-evaluate the accumlated evidence
         hop_decision = reflect(state)
+        await asyncio.sleep(5)  # Rate limit protection: 5s delay between LLM calls
 
         state.llm_calls += 1
         state.confidence = hop_decision.confidence

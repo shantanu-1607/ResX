@@ -46,47 +46,13 @@ def llm_with_fallback(
     max_tokens=1200,
     fallback_max_tokens=None,
 ):
-    try:
-        kwargs = {
-            "model": primary_model,
-            "messages": messages,
-            "max_tokens": max_tokens,
-        }
+    kwargs = {
+        "model": primary_model,
+        "messages": messages,
+        "max_tokens": max_tokens,
+    }
 
-        if reasoning_effort:
-            kwargs["reasoning_effort"] = reasoning_effort
+    if reasoning_effort:
+        kwargs["reasoning_effort"] = reasoning_effort
 
-        return client.chat.completions.create(**kwargs)
-
-    except (RateLimitError, APIStatusError) as exc:
-        status_code = getattr(exc, "status_code", None)
-        error_text = str(exc).lower()
-        is_capacity_error = (
-            isinstance(exc, RateLimitError)
-            or status_code in {413, 429}
-            or "rate_limit_exceeded" in error_text
-            or "request too large" in error_text
-            or "tokens per minute" in error_text
-        )
-
-        if fallback_model is None or not is_capacity_error:
-            raise
-
-        logger.warning(
-            "%s exceeded its token/rate capacity. Switching to %s.",
-            primary_model,
-            fallback_model,
-        )
-
-        try:
-            return client.chat.completions.create(
-                model=fallback_model,
-                messages=messages,
-                max_tokens=fallback_max_tokens or min(max_tokens, 900),
-            )
-        except (RateLimitError, APIStatusError) as fallback_exc:
-            logger.error(
-                "Fallback model %s also hit rate limit. Both models exhausted.",
-                fallback_model,
-            )
-            raise fallback_exc
+    return client.chat.completions.create(**kwargs)

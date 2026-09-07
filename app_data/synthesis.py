@@ -64,8 +64,8 @@ def _parse_groundedness_response(raw_response: str | None) -> GroundednessCheck:
 
 @timer
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=1, max=8),
+    stop=stop_after_attempt(2),
+    wait=wait_exponential(multiplier=2, min=4, max=60),
     before_sleep=before_sleep_log(logger, logging.WARNING),
     reraise=True,
 )
@@ -87,10 +87,8 @@ def check_groundedness(state, question:str, answer_text: str) -> GroundednessChe
 
     response = llm_with_fallback(
         primary_model="openai/gpt-oss-20b",
-        fallback_model="qwen/qwen3.6-27b",
         reasoning_effort="low",
         max_tokens=500,
-        fallback_max_tokens=350,
         messages=[
             {"role": "system", "content": GROUNDEDNESS_SYSTEM_PROMPT},
             {"role": "user", "content": prompt},
@@ -109,8 +107,8 @@ def check_groundedness(state, question:str, answer_text: str) -> GroundednessChe
 
 @timer
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=1, max=8),
+    stop=stop_after_attempt(2),
+    wait=wait_exponential(multiplier=2, min=4, max=60),
     before_sleep=before_sleep_log(logger, logging.WARNING),
     reraise=True,
 )
@@ -138,10 +136,8 @@ def synthesize_answer(state , query:str):
                                         {"role": "user", "content": prompt}
                                     ],
                                     primary_model="openai/gpt-oss-120b",
-                                    fallback_model="qwen/qwen3.6-27b",
                                     reasoning_effort="medium",
                                     max_tokens=1800,
-                                    fallback_max_tokens=1200,
                                 )
     logger.info("Synthesis completed.")
 

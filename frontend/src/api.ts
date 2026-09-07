@@ -96,3 +96,8 @@ export async function deleteDocument(docId: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/documents/${encodeURIComponent(docId)}`, { method: 'DELETE' })
   if (!response.ok) throw new Error(await readError(response))
 }
+
+export async function clearAllDocuments(): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/documents`, { method: 'DELETE' })
+  if (!response.ok) throw new Error(await readError(response))
+}

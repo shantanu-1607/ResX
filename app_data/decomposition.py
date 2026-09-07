@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 
 @timer
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=1, max=8),
+    stop=stop_after_attempt(2),
+    wait=wait_exponential(multiplier=2, min=4, max=60),
     before_sleep=before_sleep_log(logger, logging.WARNING),
     reraise=True,
 )
@@ -30,9 +30,7 @@ def planner(query:str) -> ResearchPlan:
     user_prompt = PLANNER_USER_PROMPT.format(query=query)
     response = llm_with_fallback(
                     primary_model="openai/gpt-oss-20b",
-                    fallback_model="qwen/qwen3.6-27b",
                     max_tokens=800,
-                    fallback_max_tokens=600,
                     messages=[
                         {"role": "system", "content": PLANNER_SYSTEM_PROMPT},
                         {"role": "user" , "content" : user_prompt}]

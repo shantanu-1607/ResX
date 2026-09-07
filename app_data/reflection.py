@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 #returns JSON for HopDecision
 @timer
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=1, max=8),
+    stop=stop_after_attempt(2),
+    wait=wait_exponential(multiplier=2, min=4, max=60),
     before_sleep=before_sleep_log(logger, logging.WARNING),
     reraise=True,
 )
@@ -69,9 +69,7 @@ def reflect(state : ResearchState) -> HopDecision:
 
             response = llm_with_fallback(
                         primary_model="openai/gpt-oss-20b",
-                        fallback_model="qwen/qwen3.6-27b",
                         max_tokens=500,
-                        fallback_max_tokens=350,
                         messages=[  {"role": "system", "content": REFLECTION_SYSTEM_PROMPT},
                                     {"role": "user", "content": user_prompt} ]
                                     )
